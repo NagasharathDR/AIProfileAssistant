@@ -1,72 +1,58 @@
-# My Python Backend
+# Profile Assistant Backend
 
-This is a Python backend project structured to provide a clean and organized architecture for developing web applications.
+A small FastAPI backend for the AI Profile Assistant project.
 
-## Project Structure
+## Requirements
 
-```
-my-python-backend
-├── app
-│   ├── __init__.py
-│   ├── main.py
-│   ├── api
-│   │   ├── __init__.py
-│   │   └── routes.py
-│   ├── core
-│   │   ├── __init__.py
-│   │   └── config.py
-│   ├── models
-│   │   └── __init__.py
-│   ├── schemas
-│   │   └── __init__.py
-│   └── services
-│       └── __init__.py
-├── tests
-│   └── __init__.py
-├── pyproject.toml
-└── README.md
+- Python 3.10 or newer
+- `pip`
+
+## Setup
+
+From this directory, create and activate a virtual environment:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
 ```
 
-## Setup Instructions
+On macOS or Linux, activate it with:
 
-1. **Clone the repository:**
-   ```
-   git clone <repository-url>
-   cd my-python-backend
-   ```
-
-2. **Create a virtual environment:**
-   ```
-   python -m venv venv
-   ```
-
-3. **Activate the virtual environment:**
-   - On Windows:
-     ```
-     venv\Scripts\activate
-     ```
-   - On macOS/Linux:
-     ```
-     source venv/bin/activate
-     ```
-
-4. **Install dependencies:**
-   ```
-   pip install -r requirements.txt
-   ```
-
-## Usage
-
-To run the application, execute the following command:
-
-```
-python -m app.main
+```sh
+source .venv/bin/activate
 ```
 
-## Contributing
+Install dependencies:
 
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+```sh
+pip install -r requirements.txt
+```
 
-## License
+Copy `.env.example` to `.env` to keep local configuration values together. The application currently reads configuration from process environment variables; it does not automatically load `.env` files.
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+## Run
+
+Start the development server from this directory:
+
+```sh
+python -m uvicorn app.main:app --reload
+```
+
+Interactive API documentation is available at `http://127.0.0.1:8000/docs`.
+
+## Endpoints
+
+- `GET /health` returns `{"status": "healthy"}`.
+- `GET /api/profile` returns illustrative sample profile data, explicitly labelled as sample data and not representing a real person.
+
+## Tests
+
+Run the test suite from this directory:
+
+```sh
+pytest
+```
+
+## MCP
+
+`app/mcp_server.py` is intentionally a placeholder. MCP functionality has not been implemented.

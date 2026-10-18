@@ -1,0 +1,1 @@
+"""Placeholder for future MCP server integration. No MCP functionality is implemented."""
