@@ -3,6 +3,10 @@ from app.api.routes import router as api_router
 
 app = FastAPI()
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the My Python Backend API"}
