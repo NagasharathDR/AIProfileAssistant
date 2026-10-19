@@ -1,13 +1,55 @@
 # Configuration settings for the application
 
 import os
+from pathlib import Path
 
 class Config:
     """Base configuration class."""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'your_default_secret_key')
     DEBUG = os.environ.get('DEBUG', 'False') == 'True'
     DATABASE_URI = os.environ.get('DATABASE_URI', 'sqlite:///default.db')
-    # Add other configuration variables as needed
+    PROFILE_PDF_MAX_BYTES = int(os.environ.get("PROFILE_PDF_MAX_BYTES", 10 * 1024 * 1024))
+    PROFILE_PDF_MAX_PAGES = int(os.environ.get("PROFILE_PDF_MAX_PAGES", 100))
+    PROFILE_CHUNK_SIZE = int(os.environ.get("PROFILE_CHUNK_SIZE", 1000))
+    PROFILE_CHUNK_OVERLAP = int(os.environ.get("PROFILE_CHUNK_OVERLAP", 150))
+    PROFILE_EMBEDDING_MODEL = os.environ.get(
+        "PROFILE_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"
+    )
+    PROFILE_RETRIEVAL_TOP_K = int(os.environ.get("PROFILE_RETRIEVAL_TOP_K", 4))
+
+    @classmethod
+    def get_profile_source_paths(cls) -> dict[str, Path]:
+        """Return the configured locations of the fixed profile source PDFs."""
+        default_source_dir = Path(__file__).resolve().parents[2] / "data" / "profile_sources"
+        source_dir = Path(os.environ.get("PROFILE_SOURCE_DIR", default_source_dir)).expanduser()
+
+        return {
+            "linkedin": Path(
+                os.environ.get("PROFILE_LINKEDIN_PDF", source_dir / "linkedin_profile.pdf")
+            ).expanduser().resolve(),
+            "resume": Path(
+                os.environ.get("PROFILE_RESUME_PDF", source_dir / "resume.pdf")
+            ).expanduser().resolve(),
+        }
+
+    @classmethod
+    def get_profile_mcp_allowed_hosts(cls) -> list[str]:
+        """Resolve MCP host allowlisting from deployment-time environment values."""
+        configured_hosts = os.environ.get("PROFILE_MCP_ALLOWED_HOSTS")
+        if configured_hosts is None:
+            configured_hosts = ",".join(
+                filter(
+                    None,
+                    [
+                        "localhost",
+                        "localhost:*",
+                        "127.0.0.1",
+                        "127.0.0.1:*",
+                        os.environ.get("SPACE_HOST"),
+                    ],
+                )
+            )
+        return [host.strip() for host in configured_hosts.split(",") if host.strip()]
 
 class DevelopmentConfig(Config):
     """Development configuration."""

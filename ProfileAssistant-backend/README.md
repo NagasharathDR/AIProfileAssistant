@@ -4,7 +4,7 @@ A small FastAPI backend for the AI Profile Assistant project.
 
 ## Requirements
 
-- Python 3.10 or newer
+- Python 3.11 or newer
 - `pip`
 
 ## Setup
@@ -53,6 +53,10 @@ Run the test suite from this directory:
 pytest
 ```
 
-## MCP
+## Profile MCP Server
 
-`app/mcp_server.py` is intentionally a placeholder. MCP functionality has not been implemented.
+The FastAPI app also exposes a Streamable HTTP MCP server at `/mcp`. Its `search_profile` tool searches the configured LinkedIn and resume PDFs and returns matching excerpts with source names and page numbers. The index is built lazily on the first tool call and kept in memory; the first call may download the configured embedding model.
+
+Connect an MCP client to `http://127.0.0.1:8000/mcp` for local development. The MCP endpoint is public unless protected by deployment-level access controls; profile excerpts returned by the tool are therefore visible to callers. MCP host validation allows localhost by default and includes Hugging Face's `SPACE_HOST` environment value when available. Set `PROFILE_MCP_ALLOWED_HOSTS` to a comma-separated explicit host allowlist when deploying elsewhere.
+
+This MCP server exposes PDF search only. It does not call an LLM or the GitHub MCP server. The GitHub MCP integration and LLM orchestration are separate future phases.
