@@ -1,4 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+
+from app.services.github_mcp import search_github_projects
+from app.services.orchestration import handle_question
 
 router = APIRouter()
 
@@ -19,6 +22,20 @@ def read_sample_profile():
             }
         ],
     }
+
+@router.get("/api/github/projects")
+async def read_github_projects(query: str = "python"):
+    try:
+        return await search_github_projects(query)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+@router.get("/api/ask")
+async def ask_question(question: str):
+    try:
+        return handle_question(question)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 @router.get("/")
 def read_root():

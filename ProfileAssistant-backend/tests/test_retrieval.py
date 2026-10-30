@@ -1,3 +1,6 @@
+import sys
+import types
+
 import pytest
 
 from app.services.chunking import ProfileChunk
@@ -66,3 +69,21 @@ def test_retriever_rejects_mismatched_embedding_count():
 
     with pytest.raises(ValueError, match="one vector per profile chunk"):
         ProfileRetriever([chunk], embedder)
+
+
+def test_from_chunks_falls_back_to_keyword_embedder(monkeypatch):
+    class FakeTextEmbedding:
+        def __init__(self, model_name):
+            raise RuntimeError("model unavailable")
+
+    monkeypatch.setitem(sys.modules, "fastembed", types.SimpleNamespace(TextEmbedding=FakeTextEmbedding))
+
+    chunks = [
+        ProfileChunk("resume", 1, 1, "python backend experience"),
+        ProfileChunk("linkedin", 2, 1, "project leadership"),
+    ]
+
+    retriever = ProfileRetriever.from_chunks(chunks)
+    results = retriever.search("python experience", top_k=1)
+
+    assert results[0].chunk.text == "python backend experience"

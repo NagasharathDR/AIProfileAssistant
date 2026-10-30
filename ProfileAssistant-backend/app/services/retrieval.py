@@ -1,3 +1,5 @@
+import re
+from collections import Counter
 from dataclasses import dataclass
 from math import sqrt
 from typing import Protocol
@@ -18,6 +20,39 @@ class RetrievedChunk:
     score: float
 
 
+class KeywordFallbackEmbedder:
+    """Offline sparse embedding that works without downloading a remote model."""
+
+    def __init__(self, documents: list[str] | None = None):
+        self._vocabulary: list[str] = []
+        self._index: dict[str, int] = {}
+        if documents:
+            self._rebuild_vocab(documents)
+
+    def _tokenize(self, text: str) -> list[str]:
+        return re.findall(r"[a-zA-Z0-9_\-]+", text.lower())
+
+    def _rebuild_vocab(self, documents: list[str]) -> None:
+        unique_tokens = sorted({token for document in documents for token in self._tokenize(document)})
+        self._vocabulary = unique_tokens
+        self._index = {token: index for index, token in enumerate(unique_tokens)}
+
+    def embed(self, documents: list[str]):
+        self._rebuild_vocab(documents)
+        return [self._vector_for_text(document) for document in documents]
+
+    def query_embed(self, query: str):
+        return [self._vector_for_text(query)]
+
+    def _vector_for_text(self, text: str) -> list[float]:
+        counts = Counter(self._tokenize(text))
+        vector = [0.0 for _ in self._vocabulary]
+        for token, count in counts.items():
+            if token in self._index:
+                vector[self._index[token]] = float(count)
+        return vector
+
+
 class ProfileRetriever:
     """An in-memory cosine-similarity index for the small profile document set."""
 
@@ -36,9 +71,12 @@ class ProfileRetriever:
 
     @classmethod
     def from_chunks(cls, chunks: list[ProfileChunk]) -> "ProfileRetriever":
-        from fastembed import TextEmbedding
+        try:
+            from fastembed import TextEmbedding
 
-        embedder = TextEmbedding(model_name=Config.PROFILE_EMBEDDING_MODEL)
+            embedder = TextEmbedding(model_name=Config.PROFILE_EMBEDDING_MODEL)
+        except Exception:
+            embedder = KeywordFallbackEmbedder([chunk.text for chunk in chunks])
         return cls(chunks, embedder)
 
     def search(self, query: str, top_k: int | None = None) -> list[RetrievedChunk]:
